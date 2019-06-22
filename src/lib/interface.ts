@@ -1,4 +1,6 @@
 export interface AlertOptions {
+  lifeTimeMs?: number;
+  showDelayMs?: number;
   backgroundColor?: string;
   borderColor?: string;
   textColor?: string;

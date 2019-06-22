@@ -11,7 +11,7 @@ import {
 import { AlertOptions } from 'projects/ng-alertbar/src/lib/interface';
 import { NgAlertbarService } from 'projects/ng-alertbar/src/lib/ng-alertbar.service';
 import { Subject, timer } from 'rxjs';
-import { delay, switchMap, takeUntil } from 'rxjs/operators';
+import { delayWhen, switchMap, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'ngab-alert-bar',
@@ -59,14 +59,21 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
 
   get openEvent() {
     return this.alertBarService.trigger$.pipe(
-      delay(this.showDelay),
+      delayWhen(({ options }) => {
+        const showDelay = (options && options.showDelayMs) || this.showDelay;
+        return timer(showDelay);
+      }),
       takeUntil(this.destroy)
     );
   }
 
   get autoCloseEvent() {
     return this.alertBarService.trigger$.pipe(
-      switchMap(() => timer(this.showDelay + this.lifeTime)),
+      switchMap(({ options }) => {
+        const showDelay = (options && options.showDelayMs) || this.showDelay;
+        const lifeTime = (options && options.lifeTimeMs) || this.lifeTime;
+        return timer(showDelay + lifeTime);
+      }),
       takeUntil(this.destroy)
     );
   }
