@@ -8,8 +8,8 @@ import {
   defaultWidthMode
 } from 'projects/ng-alertbar/src/lib/defaults';
 import { NgAlertbarService } from 'projects/ng-alertbar/src/lib/ng-alertbar.service';
-import { Subject } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Subject, timer } from 'rxjs';
+import { delay, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'ngab-alert-bar',
@@ -55,7 +55,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
       this.show = true;
     });
     this.alertBarService.trigger$
-      .pipe(delay(this.showDelay + this.lifeTime))
+      .pipe(switchMap(() => timer(this.showDelay + this.lifeTime)))
       .subscribe(() => (this.show = false));
   }
 
