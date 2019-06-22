@@ -22,7 +22,7 @@ import { delay } from 'rxjs/operators';
         [style.border-color]="borderColor"
       >
         <span class="ng-alert-bar-text" [style.color]="textColor">
-          ng-alertbar works!
+          {{ message }}
         </span>
       </div>
     </div>
@@ -40,6 +40,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   @Input() widthMode = defaultWidthMode;
 
   show = false;
+  message: string;
   private destroy = new Subject<void>();
 
   get isFullWidth() {
@@ -49,7 +50,10 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   constructor(private alertBarService: NgAlertbarService) {}
 
   ngOnInit() {
-    this.alertBarService.trigger$.pipe(delay(this.showDelay)).subscribe(() => (this.show = true));
+    this.alertBarService.trigger$.pipe(delay(this.showDelay)).subscribe(message => {
+      this.message = message;
+      this.show = true;
+    });
     this.alertBarService.trigger$
       .pipe(delay(this.showDelay + this.lifeTime))
       .subscribe(() => (this.show = false));
