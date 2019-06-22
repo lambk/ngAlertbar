@@ -7,9 +7,13 @@ import { delay } from 'rxjs/operators';
 @Component({
   selector: 'ngab-alert-bar',
   template: `
-    <p *ngIf="show">
-      ng-alertbar works!
-    </p>
+    <div *ngIf="show" class="ng-alert-bar-wrapper">
+      <div class="ng-alert-bar">
+        <span class="ng-alert-bar-text">
+          ng-alertbar works!
+        </span>
+      </div>
+    </div>
   `,
   styles: []
 })
