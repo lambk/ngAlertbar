@@ -1,0 +1,23 @@
+.ng-alert-bar-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+}
+
+.ng-alert-bar {
+  padding: 0.25rem 1rem;
+  border: 1px solid black;
+  border-top: none;
+}
+
+.ng-alert-bar:not(.full-width) {
+  display: inline-block;
+  border-radius: 0 0 5px 5px;
+}
+
+.ng-alert-bar-text {
+  font-family: Arial, Helvetica, sans-serif;
+}
