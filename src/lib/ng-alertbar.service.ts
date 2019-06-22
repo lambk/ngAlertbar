@@ -5,6 +5,9 @@ export class NgAlertbarService {
   private _trigger = new Subject<AlertTrigger>();
   trigger$ = this._trigger.asObservable();
 
+  private _cancel = new Subject<void>();
+  cancel$ = this._cancel.asObservable();
+
   constructor() {}
 
   /**
@@ -19,5 +22,12 @@ export class NgAlertbarService {
    */
   triggerAlert(message: string, options?: AlertOptions) {
     this._trigger.next({ message: message, options: options });
+  }
+
+  /**
+   * Cancels the currently displayed alert
+   */
+  cancelAlerts() {
+    this._cancel.next();
   }
 }

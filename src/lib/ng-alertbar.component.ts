@@ -11,7 +11,7 @@ import {
 import { AlertOptions } from 'projects/ng-alertbar/src/lib/interface';
 import { NgAlertbarService } from 'projects/ng-alertbar/src/lib/ng-alertbar.service';
 import { Subject, timer } from 'rxjs';
-import { delay, switchMap } from 'rxjs/operators';
+import { delay, switchMap, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'ngab-alert-bar',
@@ -57,18 +57,35 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     return this.widthMode === 'full';
   }
 
+  get openEvent() {
+    return this.alertBarService.trigger$.pipe(
+      delay(this.showDelay),
+      takeUntil(this.destroy)
+    );
+  }
+
+  get autoCloseEvent() {
+    return this.alertBarService.trigger$.pipe(
+      switchMap(() => timer(this.showDelay + this.lifeTime)),
+      takeUntil(this.destroy)
+    );
+  }
+
+  get cancelEvent() {
+    return this.alertBarService.cancel$.pipe(takeUntil(this.destroy));
+  }
+
   constructor(private alertBarService: NgAlertbarService) {}
 
   ngOnInit() {
-    this.alertBarService.trigger$.pipe(delay(this.showDelay)).subscribe(trigger => {
+    this.openEvent.subscribe(trigger => {
       this.message = trigger.message;
       this.show = true;
       this.clearTempOptions(); // Clear previous temporary options
       this.assignTempOptions(trigger.options);
     });
-    this.alertBarService.trigger$
-      .pipe(switchMap(() => timer(this.showDelay + this.lifeTime)))
-      .subscribe(() => (this.show = false));
+    this.autoCloseEvent.subscribe(() => (this.show = false));
+    this.cancelEvent.subscribe(() => (this.show = false));
   }
 
   ngOnDestroy() {
