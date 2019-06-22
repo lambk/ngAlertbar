@@ -10,7 +10,9 @@ A configurable alertbar for Angular
 npm install --save ng-alertbar
 ```
 
-2. Import `NgAlertBarModule` into your angular module
+2. Add the `themes/default.css` stylesheet to your angular.json
+
+3. Import `NgAlertBarModule` into your angular module
 
 ```
 @NgModule({
@@ -18,7 +20,7 @@ npm install --save ng-alertbar
 })
 ```
 
-3. Inject `NgAlertBarService` and call `triggerAlert(...)`
+4. Inject `NgAlertBarService` and call `triggerAlert(...)`
 
 ```
 constructor(private alertBarService: NgAlertBarService) {}
