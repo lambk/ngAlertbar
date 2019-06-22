@@ -1,4 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { slide } from 'projects/ng-alertbar/src/lib/animations';
 import {
   defaultBackgroundColor,
   defaultBorderColor,
@@ -15,7 +16,7 @@ import { delay, switchMap } from 'rxjs/operators';
 @Component({
   selector: 'ngab-alert-bar',
   template: `
-    <div *ngIf="show" class="ng-alert-bar-wrapper">
+    <div *ngIf="show" [@slide] class="ng-alert-bar-wrapper">
       <div
         class="ng-alert-bar"
         [class.full-width]="isFullWidth"
@@ -28,7 +29,8 @@ import { delay, switchMap } from 'rxjs/operators';
       </div>
     </div>
   `,
-  styles: []
+  styles: [],
+  animations: [slide]
 })
 export class NgAlertbarComponent implements OnInit, OnDestroy {
   @Input() lifeTime = defaultLifetimeMs;
