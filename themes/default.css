@@ -7,11 +7,13 @@
 }
 
 .ng-alert-bar {
-  display: inline-block;
   padding: 0.25rem 1rem;
-
   border: 1px solid black;
   border-top: none;
+}
+
+.ng-alert-bar:not(.full-width) {
+  display: inline-block;
   border-radius: 0 0 5px 5px;
 }
 

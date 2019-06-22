@@ -4,7 +4,8 @@ import {
   defaultBorderColor,
   defaultLifetimeMs,
   defaultShowDelayMs,
-  defaultTextColor
+  defaultTextColor,
+  defaultWidthMode
 } from 'projects/ng-alertbar/src/lib/defaults';
 import { NgAlertbarService } from 'projects/ng-alertbar/src/lib/ng-alertbar.service';
 import { Subject } from 'rxjs';
@@ -16,6 +17,7 @@ import { delay } from 'rxjs/operators';
     <div *ngIf="show" class="ng-alert-bar-wrapper">
       <div
         class="ng-alert-bar"
+        [class.full-width]="isFullWidth"
         [style.background]="backgroundColor"
         [style.border-color]="borderColor"
       >
@@ -30,12 +32,19 @@ import { delay } from 'rxjs/operators';
 export class NgAlertbarComponent implements OnInit, OnDestroy {
   @Input() lifeTime = defaultLifetimeMs;
   @Input() showDelay = defaultShowDelayMs;
+
   @Input() backgroundColor = defaultBackgroundColor;
   @Input() borderColor = defaultBorderColor;
   @Input() textColor = defaultTextColor;
 
+  @Input() widthMode = defaultWidthMode;
+
   show = false;
   private destroy = new Subject<void>();
+
+  get isFullWidth() {
+    return this.widthMode === 'full';
+  }
 
   constructor(private alertBarService: NgAlertbarService) {}
 
