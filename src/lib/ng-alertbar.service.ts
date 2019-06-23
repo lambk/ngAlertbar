@@ -1,4 +1,3 @@
-import { AlertOptions, AlertTrigger } from 'projects/ng-alertbar/src/lib/interface';
 import { Subject } from 'rxjs';
 import { AlertOptions, AlertTrigger } from './interface';
 
