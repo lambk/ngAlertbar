@@ -1,5 +1,7 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { slide } from 'projects/ng-alertbar/src/lib/animations';
+import { Subject, timer } from 'rxjs';
+import { delayWhen, switchMap, takeUntil } from 'rxjs/operators';
+import { slide } from './animations';
 import {
   defaultBackgroundColor,
   defaultBorderColor,
@@ -7,11 +9,9 @@ import {
   defaultShowDelayMs,
   defaultTextColor,
   defaultWidthMode
-} from 'projects/ng-alertbar/src/lib/defaults';
-import { AlertOptions } from 'projects/ng-alertbar/src/lib/interface';
-import { NgAlertbarService } from 'projects/ng-alertbar/src/lib/ng-alertbar.service';
-import { Subject, timer } from 'rxjs';
-import { delayWhen, switchMap, takeUntil } from 'rxjs/operators';
+} from './defaults';
+import { AlertOptions } from './interface';
+import { NgAlertbarService } from './ng-alertbar.service';
 
 @Component({
   selector: 'ngab-alert-bar',
