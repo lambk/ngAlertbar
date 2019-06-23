@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { NgAlertbarService } from 'projects/ng-alertbar/src/lib/ng-alertbar.service';
 import { NgAlertbarComponent } from './ng-alertbar.component';
+import { NgAlertbarService } from './ng-alertbar.service';
 
 @NgModule({
   declarations: [NgAlertbarComponent],
