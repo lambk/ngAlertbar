@@ -6,12 +6,7 @@ const defaultBorderColor = '#34a40e';
 const defaultTextColor = 'black';
 
 const defaultWidthMode: 'full' | 'partial' = 'partial';
+const defaultShowCloseButton = true;
 
-export {
-  defaultLifetimeMs,
-  defaultShowDelayMs,
-  defaultBackgroundColor,
-  defaultBorderColor,
-  defaultTextColor,
-  defaultWidthMode
-};
+export { defaultLifetimeMs, defaultShowDelayMs, defaultBackgroundColor, defaultBorderColor, defaultTextColor, defaultWidthMode, defaultShowCloseButton };
+

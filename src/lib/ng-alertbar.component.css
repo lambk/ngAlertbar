@@ -1,0 +1,23 @@
+.ng-alert-bar-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+}
+
+.ng-alert-bar {
+  pointer-events: all;
+}
+
+.ng-alert-bar:not(.full-width) {
+  display: inline-block;
+}
+
+.ng-alert-close {
+  font-size: 1.1em;
+  margin-left: 0.25rem;
+  vertical-align: middle;
+  cursor: pointer;
+}

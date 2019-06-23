@@ -6,6 +6,7 @@ import {
   defaultBackgroundColor,
   defaultBorderColor,
   defaultLifetimeMs,
+  defaultShowCloseButton,
   defaultShowDelayMs,
   defaultTextColor,
   defaultWidthMode
@@ -25,11 +26,12 @@ import { NgAlertbarService } from './ng-alertbar.service';
       >
         <span class="ng-alert-bar-text" [style.color]="tempTextColor || textColor">
           {{ message }}
+          <span *ngIf="showCloseButton" class="ng-alert-close" (click)="close()">&times;</span>
         </span>
       </div>
     </div>
   `,
-  styles: [],
+  styleUrls: ['./ng-alertbar.component.css'],
   animations: [slide]
 })
 export class NgAlertbarComponent implements OnInit, OnDestroy {
@@ -45,6 +47,8 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
 
   @Input() widthMode = defaultWidthMode;
   tempWidthMode: 'full' | 'partial';
+  @Input() closeButton = defaultShowCloseButton;
+  tempCloseButton: boolean;
 
   show = false;
   message: string;
@@ -55,6 +59,13 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
       return this.tempWidthMode === 'full';
     }
     return this.widthMode === 'full';
+  }
+
+  get showCloseButton() {
+    if (this.tempCloseButton != null) {
+      return this.tempCloseButton;
+    }
+    return this.closeButton;
   }
 
   get openEvent() {
@@ -91,8 +102,8 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
       this.clearTempOptions(); // Clear previous temporary options
       this.assignTempOptions(trigger.options);
     });
-    this.autoCloseEvent.subscribe(() => (this.show = false));
-    this.cancelEvent.subscribe(() => (this.show = false));
+    this.autoCloseEvent.subscribe(() => this.close());
+    this.cancelEvent.subscribe(() => this.close());
   }
 
   ngOnDestroy() {
@@ -108,6 +119,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     this.tempBorderColor = null;
     this.tempTextColor = null;
     this.tempWidthMode = null;
+    this.tempCloseButton = null;
   }
 
   /**
@@ -123,5 +135,10 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     this.tempBorderColor = options.borderColor;
     this.tempTextColor = options.textColor;
     this.tempWidthMode = options.widthMode;
+    this.tempCloseButton = options.closeButton;
+  }
+
+  close() {
+    this.show = false;
   }
 }
