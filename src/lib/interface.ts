@@ -5,6 +5,7 @@ export interface AlertOptions {
   borderColor?: string;
   textColor?: string;
   widthMode?: 'full' | 'partial';
+  closeButton?: boolean;
 }
 
 export interface AlertTrigger {
