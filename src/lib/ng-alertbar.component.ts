@@ -15,7 +15,7 @@ import { AlertOptions } from './interface';
 import { NgAlertbarService } from './ng-alertbar.service';
 
 @Component({
-  selector: 'ngab-alert-bar',
+  selector: 'ng-alertbar',
   template: `
     <div *ngIf="show" [@slide] class="ng-alert-bar-wrapper">
       <div
