@@ -1,6 +1,7 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { Subject, timer } from 'rxjs';
-import { delayWhen, switchMap, takeUntil } from 'rxjs/operators';
+import { AlertTrigger } from 'ng-alertbar/public_api';
+import { merge, Subject, timer } from 'rxjs';
+import { mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
 import { slide } from './animations';
 import {
   defaultBackgroundColor,
@@ -14,8 +15,10 @@ import {
 import { AlertOptions } from './interface';
 import { NgAlertbarService } from './ng-alertbar.service';
 
+const ALERT_LEAVE_ANIMATION_DURATION = 200;
+
 @Component({
-  selector: 'ngab-alert-bar',
+  selector: 'ng-alertbar',
   template: `
     <div *ngIf="show" [@slide] class="ng-alert-bar-wrapper">
       <div
@@ -26,7 +29,7 @@ import { NgAlertbarService } from './ng-alertbar.service';
       >
         <span class="ng-alert-bar-text" [style.color]="tempTextColor || textColor">
           {{ message }}
-          <span *ngIf="showCloseButton" class="ng-alert-close" (click)="close()">&times;</span>
+          <span *ngIf="showCloseButton" class="ng-alert-close" (click)="onClose()">&times;</span>
         </span>
       </div>
     </div>
@@ -35,6 +38,9 @@ import { NgAlertbarService } from './ng-alertbar.service';
   animations: [slide]
 })
 export class NgAlertbarComponent implements OnInit, OnDestroy {
+  private queue: AlertTrigger[] = [];
+  private queuePop = new Subject<AlertTrigger>();
+
   @Input() lifeTime = defaultLifetimeMs;
   @Input() showDelay = defaultShowDelayMs;
 
@@ -70,20 +76,20 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
 
   get openEvent() {
     return this.alertBarService.trigger$.pipe(
-      delayWhen(({ options }) => {
+      switchMap(trigger => {
+        const options = trigger.options;
         const showDelay = (options && options.showDelayMs) || this.showDelay;
-        return timer(showDelay);
+        return timer(showDelay).pipe(mapTo(trigger));
       }),
       takeUntil(this.destroy)
     );
   }
 
   get autoCloseEvent() {
-    return this.alertBarService.trigger$.pipe(
+    return merge(this.openEvent, this.queuePop).pipe(
       switchMap(({ options }) => {
-        const showDelay = (options && options.showDelayMs) || this.showDelay;
         const lifeTime = (options && options.lifeTimeMs) || this.lifeTime;
-        return timer(showDelay + lifeTime);
+        return timer(lifeTime);
       }),
       takeUntil(this.destroy)
     );
@@ -93,28 +99,64 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     return this.alertBarService.cancel$.pipe(takeUntil(this.destroy));
   }
 
+  get alertLeaveTimer() {
+    return timer(ALERT_LEAVE_ANIMATION_DURATION).pipe(take(1));
+  }
+
   constructor(private alertBarService: NgAlertbarService) {}
 
   ngOnInit() {
-    this.openEvent.subscribe(trigger => {
-      this.message = trigger.message;
-      this.show = true;
-      this.clearTempOptions(); // Clear previous temporary options
-      this.assignTempOptions(trigger.options);
-    });
-    this.autoCloseEvent.subscribe(() => this.close());
-    this.cancelEvent.subscribe(() => this.close());
+    this.openEvent.subscribe(trigger => this.onTrigger(trigger));
+    this.queuePop.subscribe(trigger => this.showAlert(trigger));
+    this.autoCloseEvent.subscribe(() => this.onClose());
+    this.cancelEvent.subscribe(() => this.onClose());
   }
 
   ngOnDestroy() {
     this.destroy.next();
   }
 
+  private onTrigger(trigger: AlertTrigger) {
+    if (this.show) {
+      this.queue.push(trigger);
+      return;
+    }
+    this.showAlert(trigger);
+  }
+
+  /**
+   * Sets up temp variables and shows the alert
+   * @param trigger The trigger to display
+   */
+  private showAlert(trigger: AlertTrigger) {
+    this.clearTempOptions(); // Clear previous temporary options
+    this.message = trigger.message;
+    this.show = true;
+    this.assignTempOptions(trigger.options);
+  }
+
+  /**
+   * Closes any open alert. If there are any alerts waiting in the queue,
+   * the alert is popped off the queue and emitted for opening
+   */
+  onClose() {
+    this.closeAlert();
+    if (this.queue.length > 0) {
+      this.alertLeaveTimer.subscribe(() => {
+        this.queuePop.next(this.queue.shift());
+      });
+    }
+  }
+
+  private closeAlert() {
+    this.show = false;
+  }
+
   /**
    * Clears out any temporary config options so that they
    * do not persist beyond their single use
    */
-  private clearTempOptions() {
+  private clearTempOptions(): void {
     this.tempBackgroundColor = null;
     this.tempBorderColor = null;
     this.tempTextColor = null;
@@ -136,9 +178,5 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     this.tempTextColor = options.textColor;
     this.tempWidthMode = options.widthMode;
     this.tempCloseButton = options.closeButton;
-  }
-
-  close() {
-    this.show = false;
   }
 }
