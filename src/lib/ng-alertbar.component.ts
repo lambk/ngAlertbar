@@ -1,5 +1,4 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { AlertTrigger } from 'ng-alertbar/public_api';
 import { merge, Subject, timer } from 'rxjs';
 import { mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
 import { slide } from './animations';
@@ -12,7 +11,7 @@ import {
   defaultTextColor,
   defaultWidthMode
 } from './defaults';
-import { AlertOptions } from './interface';
+import { AlertOptions, AlertTrigger } from './interface';
 import { NgAlertbarService } from './ng-alertbar.service';
 
 const ALERT_LEAVE_ANIMATION_DURATION = 200;
