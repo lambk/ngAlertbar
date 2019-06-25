@@ -1,16 +1,8 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { defaults } from 'projects/ng-alertbar/src/lib/defaults';
 import { Subject, timer } from 'rxjs';
 import { mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
 import { slide } from './animations';
-import {
-  defaultBackgroundColor,
-  defaultBorderColor,
-  defaultLifetimeMs,
-  defaultShowCloseButton,
-  defaultShowDelayMs,
-  defaultTextColor,
-  defaultWidthMode
-} from './defaults';
 import { AlertOptions, AlertTrigger } from './interface';
 import { NgAlertbarService } from './ng-alertbar.service';
 
@@ -40,19 +32,20 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   private queue: AlertTrigger[] = [];
   private queuePop = new Subject<AlertTrigger>();
 
-  @Input() lifeTime = defaultLifetimeMs;
-  @Input() showDelay = defaultShowDelayMs;
+  @Input() queueing = defaults.queueingEnabled;
+  @Input() lifeTime = defaults.lifeTimeMs;
+  @Input() showDelay = defaults.showDelayMs;
 
-  @Input() backgroundColor = defaultBackgroundColor;
+  @Input() backgroundColor = defaults.backgroundColor;
   tempBackgroundColor: string;
-  @Input() borderColor = defaultBorderColor;
+  @Input() borderColor = defaults.borderColor;
   tempBorderColor: string;
-  @Input() textColor = defaultTextColor;
+  @Input() textColor = defaults.textColor;
   tempTextColor: string;
 
-  @Input() widthMode = defaultWidthMode;
+  @Input() widthMode = defaults.widthMode;
   tempWidthMode: 'full' | 'partial';
-  @Input() closeButton = defaultShowCloseButton;
+  @Input() closeButton = defaults.closeButtonEnabled;
   tempCloseButton: boolean;
 
   @Output() open = new EventEmitter<AlertTrigger>();
@@ -131,7 +124,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   }
 
   private onTrigger(trigger: AlertTrigger) {
-    if (!(trigger.options && trigger.options.bypassQueue) && this.show) {
+    if (this.queueing && !(trigger.options && trigger.options.bypassQueue) && this.show) {
       this.queue.push(trigger);
       return;
     }
