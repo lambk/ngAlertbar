@@ -1,5 +1,5 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { merge, Subject, timer } from 'rxjs';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Subject, timer } from 'rxjs';
 import { mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
 import { slide } from './animations';
 import {
@@ -55,6 +55,9 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   @Input() closeButton = defaultShowCloseButton;
   tempCloseButton: boolean;
 
+  @Output() open = new EventEmitter<AlertTrigger>();
+  @Output() close = new EventEmitter<void>();
+
   show = false;
   message: string;
   private destroy = new Subject<void>();
@@ -73,7 +76,10 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     return this.closeButton;
   }
 
-  get openEvent() {
+  /**
+   * The trigger stream after waiting the specified showDelay since the alert was triggered
+   */
+  get openTriggerPostDelay$() {
     return this.alertBarService.trigger$.pipe(
       switchMap(trigger => {
         const options = trigger.options;
@@ -84,8 +90,11 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     );
   }
 
-  get autoCloseEvent() {
-    return merge(this.openEvent, this.queuePop).pipe(
+  /**
+   * The trigger stream after waiting the specified lifetime since the alert opened
+   */
+  get postAlertLifetime$() {
+    return this.open.pipe(
       switchMap(({ options }) => {
         const lifeTime = (options && options.lifeTimeMs) || this.lifeTime;
         return timer(lifeTime);
@@ -94,10 +103,16 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     );
   }
 
-  get cancelEvent() {
+  /**
+   * The service cancel trigger
+   */
+  get cancelTrigger$() {
     return this.alertBarService.cancel$.pipe(takeUntil(this.destroy));
   }
 
+  /**
+   * Timer representing the delay taken for an alert to animate when exiting
+   */
   get alertLeaveTimer() {
     return timer(ALERT_LEAVE_ANIMATION_DURATION).pipe(take(1));
   }
@@ -105,10 +120,10 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   constructor(private alertBarService: NgAlertbarService) {}
 
   ngOnInit() {
-    this.openEvent.subscribe(trigger => this.onTrigger(trigger));
+    this.openTriggerPostDelay$.subscribe(trigger => this.onTrigger(trigger));
     this.queuePop.subscribe(trigger => this.showAlert(trigger));
-    this.autoCloseEvent.subscribe(() => this.onClose());
-    this.cancelEvent.subscribe(() => this.onClose());
+    this.postAlertLifetime$.subscribe(() => this.onClose());
+    this.cancelTrigger$.subscribe(() => this.onClose());
   }
 
   ngOnDestroy() {
@@ -129,9 +144,10 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
    */
   private showAlert(trigger: AlertTrigger) {
     this.clearTempOptions(); // Clear previous temporary options
+    this.assignTempOptions(trigger.options);
     this.message = trigger.message;
     this.show = true;
-    this.assignTempOptions(trigger.options);
+    this.open.emit(trigger);
   }
 
   /**
@@ -149,6 +165,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
 
   private closeAlert() {
     this.show = false;
+    this.close.emit();
   }
 
   /**
