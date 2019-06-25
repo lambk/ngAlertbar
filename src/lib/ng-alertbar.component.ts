@@ -116,7 +116,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   }
 
   private onTrigger(trigger: AlertTrigger) {
-    if (this.show) {
+    if (!(trigger.options && trigger.options.bypassQueue) && this.show) {
       this.queue.push(trigger);
       return;
     }

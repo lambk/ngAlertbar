@@ -6,6 +6,7 @@ export interface AlertOptions {
   textColor?: string;
   widthMode?: 'full' | 'partial';
   closeButton?: boolean;
+  bypassQueue?: boolean;
 }
 
 export interface AlertTrigger {
