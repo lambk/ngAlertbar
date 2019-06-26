@@ -1,16 +1,9 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { merge, Subject, timer } from 'rxjs';
-import { mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Subject, timer } from 'rxjs';
+import { filter, mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
 import { slide } from './animations';
-import {
-  defaultBackgroundColor,
-  defaultBorderColor,
-  defaultLifetimeMs,
-  defaultShowCloseButton,
-  defaultShowDelayMs,
-  defaultTextColor,
-  defaultWidthMode
-} from './defaults';
+import { defaults } from './defaults';
 import { AlertOptions, AlertTrigger } from './interface';
 import { NgAlertbarService } from './ng-alertbar.service';
 
@@ -27,7 +20,8 @@ const ALERT_LEAVE_ANIMATION_DURATION = 200;
         [style.border-color]="tempBorderColor || borderColor"
       >
         <span class="ng-alert-bar-text" [style.color]="tempTextColor || textColor">
-          {{ message }}
+          <span *ngIf="!useHtml; else htmlMessageContainer">{{ message }}</span>
+          <ng-template #htmlMessageContainer><span [innerHTML]="htmlMessage"></span></ng-template>
           <span *ngIf="showCloseButton" class="ng-alert-close" (click)="onClose()">&times;</span>
         </span>
       </div>
@@ -40,20 +34,26 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   private queue: AlertTrigger[] = [];
   private queuePop = new Subject<AlertTrigger>();
 
-  @Input() lifeTime = defaultLifetimeMs;
-  @Input() showDelay = defaultShowDelayMs;
+  @Input() queueing = defaults.queueingEnabled;
+  @Input() lifeTime = defaults.lifeTimeMs;
+  @Input() showDelay = defaults.showDelayMs;
 
-  @Input() backgroundColor = defaultBackgroundColor;
+  @Input() backgroundColor = defaults.backgroundColor;
   tempBackgroundColor: string;
-  @Input() borderColor = defaultBorderColor;
+  @Input() borderColor = defaults.borderColor;
   tempBorderColor: string;
-  @Input() textColor = defaultTextColor;
+  @Input() textColor = defaults.textColor;
   tempTextColor: string;
 
-  @Input() widthMode = defaultWidthMode;
+  @Input() widthMode = defaults.widthMode;
   tempWidthMode: 'full' | 'partial';
-  @Input() closeButton = defaultShowCloseButton;
+  @Input() closeButton = defaults.closeButtonEnabled;
   tempCloseButton: boolean;
+  @Input() html = defaults.useHtml;
+  tempHtml: boolean;
+
+  @Output() open = new EventEmitter<AlertTrigger>();
+  @Output() close = new EventEmitter<void>();
 
   show = false;
   message: string;
@@ -73,42 +73,66 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     return this.closeButton;
   }
 
-  get openEvent() {
+  get useHtml() {
+    if (this.tempHtml != null) {
+      return this.tempHtml;
+    }
+    return this.html;
+  }
+
+  get htmlMessage() {
+    return this.domSanitizer.bypassSecurityTrustHtml(this.message);
+  }
+
+  /**
+   * The trigger stream after waiting the specified showDelay since the alert was triggered
+   */
+  get openTriggerPostDelay$() {
     return this.alertBarService.trigger$.pipe(
       switchMap(trigger => {
         const options = trigger.options;
-        const showDelay = (options && options.showDelayMs) || this.showDelay;
+        const showDelay = (options && options.showDelay) || this.showDelay;
         return timer(showDelay).pipe(mapTo(trigger));
       }),
       takeUntil(this.destroy)
     );
   }
 
-  get autoCloseEvent() {
-    return merge(this.openEvent, this.queuePop).pipe(
+  /**
+   * The trigger stream after waiting the specified lifetime since the alert opened
+   */
+  get postAlertLifetime$() {
+    return this.open.pipe(
+      filter(({ options }) => this.shouldAlertAutoClose(options)),
       switchMap(({ options }) => {
-        const lifeTime = (options && options.lifeTimeMs) || this.lifeTime;
+        const lifeTime = (options && options.lifeTime) || this.lifeTime;
         return timer(lifeTime);
       }),
       takeUntil(this.destroy)
     );
   }
 
-  get cancelEvent() {
+  /**
+   * The service cancel trigger
+   */
+  get cancelTrigger$() {
     return this.alertBarService.cancel$.pipe(takeUntil(this.destroy));
   }
 
+  /**
+   * Timer representing the delay taken for an alert to animate when exiting
+   */
   get alertLeaveTimer() {
     return timer(ALERT_LEAVE_ANIMATION_DURATION).pipe(take(1));
   }
 
-  constructor(private alertBarService: NgAlertbarService) {}
+  constructor(private alertBarService: NgAlertbarService, private domSanitizer: DomSanitizer) {}
 
   ngOnInit() {
-    this.openEvent.subscribe(trigger => this.onTrigger(trigger));
+    this.openTriggerPostDelay$.subscribe(trigger => this.onTrigger(trigger));
     this.queuePop.subscribe(trigger => this.showAlert(trigger));
-    this.autoCloseEvent.subscribe(() => this.onClose());
-    this.cancelEvent.subscribe(() => this.onClose());
+    this.postAlertLifetime$.subscribe(() => this.onClose());
+    this.cancelTrigger$.subscribe(() => this.onClose());
   }
 
   ngOnDestroy() {
@@ -116,7 +140,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   }
 
   private onTrigger(trigger: AlertTrigger) {
-    if (this.show) {
+    if (this.queueing && !(trigger.options && trigger.options.bypassQueue) && this.show) {
       this.queue.push(trigger);
       return;
     }
@@ -129,9 +153,10 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
    */
   private showAlert(trigger: AlertTrigger) {
     this.clearTempOptions(); // Clear previous temporary options
+    this.assignTempOptions(trigger.options);
     this.message = trigger.message;
     this.show = true;
-    this.assignTempOptions(trigger.options);
+    this.open.emit(trigger);
   }
 
   /**
@@ -149,6 +174,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
 
   private closeAlert() {
     this.show = false;
+    this.close.emit();
   }
 
   /**
@@ -161,6 +187,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     this.tempTextColor = null;
     this.tempWidthMode = null;
     this.tempCloseButton = null;
+    this.tempHtml = null;
   }
 
   /**
@@ -177,5 +204,13 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     this.tempTextColor = options.textColor;
     this.tempWidthMode = options.widthMode;
     this.tempCloseButton = options.closeButton;
+    this.tempHtml = options.html;
+  }
+
+  private shouldAlertAutoClose(options: AlertOptions) {
+    if (options && options.lifeTime != null) {
+      return options.lifeTime > 0;
+    }
+    return this.lifeTime > 0; // Fallback to component setting
   }
 }

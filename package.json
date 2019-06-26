@@ -1,6 +1,14 @@
 {
   "name": "ng-alertbar",
-  "version": "1.1.0",
+  "version": "1.2.0",
+  "keywords": [
+    "angular",
+    "alert",
+    "alertbar"
+  ],
+  "homepage": "https://github.com/lambk/ngAlertbar",
+  "bugs": "https://github.com/lambk/ngAlertbar/issues",
+  "license": "MIT",
   "peerDependencies": {
     "@angular/common": "^7.1.0",
     "@angular/core": "^7.1.0",
