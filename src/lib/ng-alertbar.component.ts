@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { defaults } from 'projects/ng-alertbar/src/lib/defaults';
 import { Subject, timer } from 'rxjs';
 import { filter, mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
@@ -19,7 +20,8 @@ const ALERT_LEAVE_ANIMATION_DURATION = 200;
         [style.border-color]="tempBorderColor || borderColor"
       >
         <span class="ng-alert-bar-text" [style.color]="tempTextColor || textColor">
-          {{ message }}
+          <span *ngIf="!useHtml; else htmlMessageContainer">{{ message }}</span>
+          <ng-template #htmlMessageContainer><span [innerHTML]="htmlMessage"></span></ng-template>
           <span *ngIf="showCloseButton" class="ng-alert-close" (click)="onClose()">&times;</span>
         </span>
       </div>
@@ -47,6 +49,8 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   tempWidthMode: 'full' | 'partial';
   @Input() closeButton = defaults.closeButtonEnabled;
   tempCloseButton: boolean;
+  @Input() html = defaults.useHtml;
+  tempHtml: boolean;
 
   @Output() open = new EventEmitter<AlertTrigger>();
   @Output() close = new EventEmitter<void>();
@@ -67,6 +71,17 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
       return this.tempCloseButton;
     }
     return this.closeButton;
+  }
+
+  get useHtml() {
+    if (this.tempHtml != null) {
+      return this.tempHtml;
+    }
+    return this.html;
+  }
+
+  get htmlMessage() {
+    return this.domSanitizer.bypassSecurityTrustHtml(this.message);
   }
 
   /**
@@ -111,7 +126,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     return timer(ALERT_LEAVE_ANIMATION_DURATION).pipe(take(1));
   }
 
-  constructor(private alertBarService: NgAlertbarService) {}
+  constructor(private alertBarService: NgAlertbarService, private domSanitizer: DomSanitizer) {}
 
   ngOnInit() {
     this.openTriggerPostDelay$.subscribe(trigger => this.onTrigger(trigger));
@@ -172,6 +187,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     this.tempTextColor = null;
     this.tempWidthMode = null;
     this.tempCloseButton = null;
+    this.tempHtml = null;
   }
 
   /**
@@ -188,6 +204,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     this.tempTextColor = options.textColor;
     this.tempWidthMode = options.widthMode;
     this.tempCloseButton = options.closeButton;
+    this.tempHtml = options.html;
   }
 
   private shouldAlertAutoClose(options: AlertOptions) {

@@ -6,5 +6,6 @@ export const defaults = {
   borderColor: '#34a40e',
   textColor: 'black',
   widthMode: 'partial',
-  closeButtonEnabled: true
+  closeButtonEnabled: true,
+  useHtml: false
 };

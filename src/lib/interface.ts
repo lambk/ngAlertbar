@@ -7,6 +7,7 @@ export interface AlertOptions {
   widthMode?: 'full' | 'partial';
   closeButton?: boolean;
   bypassQueue?: boolean;
+  html?: boolean;
 }
 
 export interface AlertTrigger {
