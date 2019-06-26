@@ -1,9 +1,9 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { defaults } from 'projects/ng-alertbar/src/lib/defaults';
 import { Subject, timer } from 'rxjs';
 import { filter, mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
 import { slide } from './animations';
+import { defaults } from './defaults';
 import { AlertOptions, AlertTrigger } from './interface';
 import { NgAlertbarService } from './ng-alertbar.service';
 
