@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { defaults } from 'projects/ng-alertbar/src/lib/defaults';
 import { Subject, timer } from 'rxjs';
-import { mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
+import { filter, mapTo, switchMap, take, takeUntil } from 'rxjs/operators';
 import { slide } from './animations';
 import { AlertOptions, AlertTrigger } from './interface';
 import { NgAlertbarService } from './ng-alertbar.service';
@@ -88,6 +88,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
    */
   get postAlertLifetime$() {
     return this.open.pipe(
+      filter(({ options }) => this.shouldAlertAutoClose(options)),
       switchMap(({ options }) => {
         const lifeTime = (options && options.lifeTimeMs) || this.lifeTime;
         return timer(lifeTime);
@@ -187,5 +188,12 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     this.tempTextColor = options.textColor;
     this.tempWidthMode = options.widthMode;
     this.tempCloseButton = options.closeButton;
+  }
+
+  private shouldAlertAutoClose(options: AlertOptions) {
+    if (options && options.lifeTimeMs != null) {
+      return options.lifeTimeMs > 0;
+    }
+    return this.lifeTime > 0; // Fallback to component setting
   }
 }
