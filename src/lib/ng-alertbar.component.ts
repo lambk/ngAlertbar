@@ -76,7 +76,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     return this.alertBarService.trigger$.pipe(
       switchMap(trigger => {
         const options = trigger.options;
-        const showDelay = (options && options.showDelayMs) || this.showDelay;
+        const showDelay = (options && options.showDelay) || this.showDelay;
         return timer(showDelay).pipe(mapTo(trigger));
       }),
       takeUntil(this.destroy)
@@ -90,7 +90,7 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
     return this.open.pipe(
       filter(({ options }) => this.shouldAlertAutoClose(options)),
       switchMap(({ options }) => {
-        const lifeTime = (options && options.lifeTimeMs) || this.lifeTime;
+        const lifeTime = (options && options.lifeTime) || this.lifeTime;
         return timer(lifeTime);
       }),
       takeUntil(this.destroy)
@@ -191,8 +191,8 @@ export class NgAlertbarComponent implements OnInit, OnDestroy {
   }
 
   private shouldAlertAutoClose(options: AlertOptions) {
-    if (options && options.lifeTimeMs != null) {
-      return options.lifeTimeMs > 0;
+    if (options && options.lifeTime != null) {
+      return options.lifeTime > 0;
     }
     return this.lifeTime > 0; // Fallback to component setting
   }
