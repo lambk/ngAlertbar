@@ -2,6 +2,8 @@
 
 A configurable alertbar for Angular
 
+[View demo](https://stackblitz.com/edit/ng-alertbar)
+
 ## Installation
 
 1. Install using npm
